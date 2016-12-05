@@ -75,6 +75,7 @@
     return [self linq_where:condition].count;
 }
 
+/// 合并 dictionary如果有相同的可以将被忽略
 - (NSDictionary *)linq_Merge:(NSDictionary *)dictionary
 {
     NSMutableDictionary* result = [[NSMutableDictionary alloc] initWithDictionary:self];

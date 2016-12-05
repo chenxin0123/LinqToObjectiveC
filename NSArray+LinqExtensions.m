@@ -10,6 +10,7 @@
 
 @implementation NSArray (QueryExtension)
 
+/// 返回符合predicate的所有项 filter
 - (NSArray *)linq_where:(LINQCondition)predicate
 {
     NSMutableArray* result = [[NSMutableArray alloc] init];
@@ -21,6 +22,8 @@
     return result;
 }
 
+/// shouldStopOnError为YES 一旦transform返回nil 函数返回nil 否则用NSNull代替
+/// 类似map效果
 - (NSArray *)linq_select:(LINQSelector)transform
           andStopOnError:(BOOL)shouldStopOnError
 {
@@ -59,7 +62,7 @@
               andStopOnError: YES];
 }
 
-
+/// keySelector接收对象返回一个用于比较的值 按这个值升序
 - (NSArray *)linq_sort:(LINQSelector)keySelector
 {
     return [self sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
@@ -70,11 +73,13 @@
     }];
 }
 
+/// 按存储的对象本身升序 用compare:
 - (NSArray *)linq_sort
 {
     return [self linq_sort:^id(id item) { return item;} ];
 }
 
+/// 降序
 - (NSArray *)linq_sortDescending:(LINQSelector)keySelector
 {
     return [self sortedArrayUsingComparator:^NSComparisonResult(id obj2, id obj1) {
@@ -85,11 +90,13 @@
     }];
 }
 
+/// 降序
 - (NSArray *)linq_sortDescending
 {
     return [self linq_sortDescending:^id(id item) { return item;} ];
 }
 
+/// filter效果 类的实例
 - (NSArray *)linq_ofType:(Class)type
 {
     return [self linq_where:^BOOL(id item) {
@@ -97,6 +104,7 @@
     }];
 }
 
+/// 每项对应一个数组 将数组的项全部添加到结果 1-n
 - (NSArray *)linq_selectMany:(LINQSelector)transform
 {
     NSMutableArray* result = [[NSMutableArray alloc] init];
@@ -108,6 +116,7 @@
     return result;
 }
 
+/// 返回去重后的数组
 - (NSArray *)linq_distinct
 {
     NSMutableArray* distinctSet = [[NSMutableArray alloc] init];
@@ -119,6 +128,7 @@
     return distinctSet;
 }
 
+/// 映射结果去重
 - (NSArray *)linq_distinct:(LINQSelector)keySelector
 {
     NSMutableSet* keyValues = [[NSMutableSet alloc] init];
@@ -135,6 +145,7 @@
     return distinctSet;
 }
 
+/// 聚集
 - (id)linq_aggregate:(LINQAccumulator)accumulator
 {
     id aggregate = nil;
@@ -153,6 +164,7 @@
     return self.count == 0 ? nil : [self objectAtIndex:0];
 }
 
+/// 返回第一个通过predicate的项
 - (id)linq_firstOrNil:(LINQCondition)predicate
 {
     for(id item in self) {
@@ -168,6 +180,7 @@
     return self.count == 0 ? nil : [self objectAtIndex:self.count - 1];
 }
 
+/// 子数组 skip
 - (NSArray*)linq_skip:(NSUInteger)count
 {
     if (count < self.count) {
@@ -178,6 +191,7 @@
     }
 }
 
+/// 子数组 only take
 - (NSArray*)linq_take:(NSUInteger)count
 {
     NSRange range = { .location=0,
@@ -205,6 +219,7 @@
     return YES;
 }
 
+/// 分组 返回字典 key为groupKeySelector返回的值nil对应NSNull value为数组
 - (NSDictionary*)linq_groupBy:(LINQSelector)groupKeySelector
 {
     NSMutableDictionary* groupedItems = [[NSMutableDictionary alloc] init];
@@ -222,6 +237,9 @@
     return groupedItems;
 }
 
+/// 值->(key:value) key由keySelector计算 value由valueSelector
+/// 返回nil的话会用NSNull代替 多个key返回NSNull会导致值丢失
+/// valueSelector为nil时value就说item
 - (NSDictionary *)linq_toDictionaryWithKeySelector:(LINQSelector)keySelector valueSelector:(LINQSelector)valueSelector
 {
     NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
